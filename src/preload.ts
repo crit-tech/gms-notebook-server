@@ -1,0 +1,16 @@
+// See the Electron documentation for details on how to use preload scripts:
+// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+
+export interface GmsNotebookNamespace {
+  serverUrl: string;
+}
+
+declare global {
+  interface Window {
+    GmsNotebook: GmsNotebookNamespace;
+  }
+}
+
+window.GmsNotebook = {
+  serverUrl: "http://localhost:" + (process.env.PORT || "3000"),
+};
