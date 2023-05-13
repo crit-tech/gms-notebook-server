@@ -11,7 +11,7 @@
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "test-server": "cross-env BROWSER=none NODE_ENV=test PORT=3001 LOCAL_FOLDER=./src/backend/test-files electron-forge start",
-    "test-runner": "wait-on http://localhost:3001 && cross-env PORT=3001 jest",
+    "test-runner": "wait-on http://127.0.0.1:3001 && cross-env PORT=3001 jest",
     "test": "concurrently -r -s command-1 -k npm:test-server npm:test-runner"
   },
   "keywords": [],

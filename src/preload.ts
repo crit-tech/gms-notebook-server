@@ -2,7 +2,7 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 export interface GmsNotebookNamespace {
-  serverUrl: string;
+  serverUrl?: string;
 }
 
 declare global {
@@ -11,6 +11,4 @@ declare global {
   }
 }
 
-window.GmsNotebook = {
-  serverUrl: "http://localhost:" + (process.env.PORT || "3000"),
-};
+window.GmsNotebook = {};

@@ -13,7 +13,7 @@ import { resolveFilePath, pathExists } from "./utils";
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT || 3001;
+const port: number = parseInt(process.env.PORT || "3001", 10);
 const upload = multer({ dest: "uploads/" });
 
 const folder = process.env.LOCAL_FOLDER || __dirname;
@@ -80,7 +80,7 @@ app.get("/api/file", async (req: Request, res: Response) => {
       contents: isText
         ? await fs.promises.readFile(filePath, "utf8")
         : undefined,
-      downloadUrl: `http://localhost:${port}/download/${slash(
+      downloadUrl: `http://127.0.0.1:${port}/download/${slash(
         path.relative(folder, filePath)
       )}`,
     });
@@ -229,6 +229,6 @@ app.put("/api/create-directory", async (req: Request, res: Response) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+app.listen(port, "127.0.0.1", () => {
+  console.log(`⚡️[server]: Server is running at http://127.0.0.1:${port}`);
 });
