@@ -1,8 +1,10 @@
 import { execSync } from "child_process";
 import fs from "fs";
+import path from "path";
 
 const baseUrl = "http://localhost:" + process.env.PORT;
-const newDirectory = "./test-files/new-directory";
+const testFilesDirectory = path.resolve(__dirname, "test-files");
+const newDirectory = path.join(testFilesDirectory, "new-directory");
 
 interface FileItem {
   name: string;
@@ -16,8 +18,10 @@ const comparer = (a: FileItem, b: FileItem) => {
 };
 
 function cleanup() {
-  execSync("git restore --source=HEAD --staged --worktree -- ./test-files");
-  execSync("git clean -f -d -- ./test-files");
+  execSync(
+    `git restore --source=HEAD --staged --worktree -- ${testFilesDirectory}`
+  );
+  execSync(`git clean -f -d -- ${testFilesDirectory}`);
 }
 
 beforeAll(cleanup);
@@ -178,7 +182,10 @@ test("upload a new file", async () => {
   const json = await response.json();
   expect(json).toEqual({ name: "new-file.md", success: true });
 
-  const contents = fs.readFileSync("./test-files/samples/new-file.md", "utf8");
+  const contents = fs.readFileSync(
+    path.join(testFilesDirectory, "samples/new-file.md"),
+    "utf8"
+  );
   expect(contents).toBe("Hello, World!");
 });
 
@@ -198,7 +205,7 @@ test("upload a new file, non-existant folder", async () => {
   expect(json).toEqual({ name: "new-file.md", success: true });
 
   const contents = fs.readFileSync(
-    "./test-files/samples/new-folder/new-file.md",
+    path.join(testFilesDirectory, "samples/new-folder/new-file.md"),
     "utf8"
   );
   expect(contents).toBe("Hello, World!");
@@ -220,14 +227,16 @@ test("upload a new file, with autorename", async () => {
   expect(json).toEqual({ name: "markdown-1.md", success: true });
 
   const contents = fs.readFileSync(
-    "./test-files/samples/markdown-1.md",
+    path.join(testFilesDirectory, "samples/markdown-1.md"),
     "utf8"
   );
   expect(contents).toBe("Hello, World!");
 });
 
 test("rename a file", async () => {
-  expect(fs.existsSync("./test-files/samples/rename_me.md")).toBe(true);
+  expect(
+    fs.existsSync(path.join(testFilesDirectory, "samples/rename_me.md"))
+  ).toBe(true);
 
   const response = await fetch(
     baseUrl + "/api/file?filePath=samples%2Frename_me.md&newName=renamed.md",
@@ -239,12 +248,18 @@ test("rename a file", async () => {
   const json = await response.json();
   expect(json).toEqual({ success: true });
 
-  expect(fs.existsSync("./test-files/samples/rename_me.md")).toBe(false);
-  expect(fs.existsSync("./test-files/samples/renamed.md")).toBe(true);
+  expect(
+    fs.existsSync(path.join(testFilesDirectory, "samples/rename_me.md"))
+  ).toBe(false);
+  expect(
+    fs.existsSync(path.join(testFilesDirectory, "samples/renamed.md"))
+  ).toBe(true);
 });
 
 test("rename a file, case insensitive", async () => {
-  expect(fs.existsSync("./test-files/samples/rename_me_TOO.md")).toBe(true);
+  expect(
+    fs.existsSync(path.join(testFilesDirectory, "samples/rename_me_TOO.md"))
+  ).toBe(true);
 
   const response = await fetch(
     baseUrl +
@@ -257,12 +272,18 @@ test("rename a file, case insensitive", async () => {
   const json = await response.json();
   expect(json).toEqual({ success: true });
 
-  expect(fs.existsSync("./test-files/samples/rename_me_TOO.md")).toBe(false);
-  expect(fs.existsSync("./test-files/samples/renamed.md")).toBe(true);
+  expect(
+    fs.existsSync(path.join(testFilesDirectory, "samples/rename_me_TOO.md"))
+  ).toBe(false);
+  expect(
+    fs.existsSync(path.join(testFilesDirectory, "samples/renamed.md"))
+  ).toBe(true);
 });
 
 test("delete a file", async () => {
-  expect(fs.existsSync("./test-files/samples/delete_me.md")).toBe(true);
+  expect(
+    fs.existsSync(path.join(testFilesDirectory, "samples/delete_me.md"))
+  ).toBe(true);
 
   const response = await fetch(
     baseUrl + "/api/file?filePath=samples%2Fdelete_me.md",
@@ -274,11 +295,15 @@ test("delete a file", async () => {
   const json = await response.json();
   expect(json).toEqual({ success: true });
 
-  expect(fs.existsSync("./test-files/samples/delete_me.md")).toBe(false);
+  expect(
+    fs.existsSync(path.join(testFilesDirectory, "samples/delete_me.md"))
+  ).toBe(false);
 });
 
 test("delete a folder", async () => {
-  expect(fs.existsSync("./test-files/delete_this_folder")).toBe(true);
+  expect(
+    fs.existsSync(path.join(testFilesDirectory, "delete_this_folder"))
+  ).toBe(true);
 
   const response = await fetch(
     baseUrl + "/api/file?filePath=delete_this_folder",
@@ -290,5 +315,7 @@ test("delete a folder", async () => {
   const json = await response.json();
   expect(json).toEqual({ success: true });
 
-  expect(fs.existsSync("./test-files/delete_this_folder")).toBe(false);
+  expect(
+    fs.existsSync(path.join(testFilesDirectory, "delete_this_folder"))
+  ).toBe(false);
 });

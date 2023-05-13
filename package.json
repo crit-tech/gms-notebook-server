@@ -2,7 +2,7 @@
   "name": "gms-notebook-server",
   "productName": "gms-notebook-server",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "GM's Notebook Local Server",
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
@@ -11,7 +11,7 @@
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "test-server": "cross-env NODE_ENV=test PORT=3001 LOCAL_FOLDER=./src/backend/test-files npm run start",
-    "test-runner": "cross-env PORT=3001 jest",
+    "test-runner": "sleep 10 && cross-env PORT=3001 jest",
     "test": "concurrently -s command-1 -k npm:test-server npm:test-runner"
   },
   "keywords": [],
