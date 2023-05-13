@@ -10,9 +10,9 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
-    "test-server": "cross-env NODE_ENV=test PORT=3001 LOCAL_FOLDER=./src/backend/test-files npm run start",
-    "test-runner": "node sleep.js && cross-env PORT=3001 jest",
-    "test": "concurrently -s command-1 -k npm:test-server npm:test-runner"
+    "test-server": "cross-env BROWSER=none NODE_ENV=test PORT=3001 LOCAL_FOLDER=./src/backend/test-files electron-forge start",
+    "test-runner": "wait-on http://localhost:3001 && cross-env PORT=3001 jest",
+    "test": "concurrently -r -s command-1 -k npm:test-server npm:test-runner"
   },
   "keywords": [],
   "author": {
@@ -48,7 +48,7 @@
     "style-loader": "^3.0.0",
     "ts-jest": "^29.1.0",
     "ts-loader": "^9.2.2",
-    "ts-node": "^10.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "~4.5.4"
   },
   "dependencies": {
@@ -66,6 +66,7 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "wait-on": "^7.0.1"
   }
 }
