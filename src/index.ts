@@ -16,6 +16,7 @@ const createWindow = (): void => {
     height: 600,
     width: 800,
     autoHideMenuBar: true,
+    icon: "./images/icon.png",
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
