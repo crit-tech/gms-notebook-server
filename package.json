@@ -9,10 +9,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx .",
-    "test-server": "cross-env BROWSER=none NODE_ENV=test PORT=3001 LOCAL_FOLDER=./src/backend/test-files electron-forge start",
-    "test-runner": "node sleep.js && cross-env PORT=3001 jest",
-    "test": "concurrently -r -s command-1 -k npm:test-server npm:test-runner"
+    "lint": "eslint --ext .ts,.tsx ."
   },
   "keywords": [],
   "author": {
@@ -61,6 +58,7 @@
     "dotenv": "^16.0.3",
     "electron-squirrel-startup": "^1.0.0",
     "glob": "^10.2.3",
+    "gms-notebook-file-server": "^1.1.0",
     "jest": "^29.5.0",
     "junk": "^4.0.1",
     "morgan": "^1.10.0",
