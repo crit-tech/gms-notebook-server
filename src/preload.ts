@@ -8,6 +8,7 @@ import {
   GmsNotebookNamespace,
   ServerPortAndFolderPath,
   ServerRecord,
+  Settings,
 } from "./types";
 
 const startingPort = 3001;
@@ -15,8 +16,40 @@ const startingPort = 3001;
 export class GmsNotebookServers implements GmsNotebookNamespace {
   private servers: ServerRecord[] = [];
 
+  constructor() {
+    let settings: Settings = { servers: [] };
+    try {
+      const settingsString = process.argv[process.argv.length - 1];
+      settings = JSON.parse(settingsString);
+    } catch (e) {
+      // Ignore
+    }
+
+    settings.servers.forEach((serverRecord) => {
+      this.startServer(serverRecord.folderPath);
+    });
+  }
+
+  public getServers(): ServerPortAndFolderPath[] {
+    return this.servers.map((serverRecord) => ({
+      port: serverRecord.port,
+      folderPath: serverRecord.folderPath,
+    }));
+  }
+
+  public saveSettings(): void {
+    const settings: Settings = {
+      servers: this.getServers(),
+    };
+    ipcRenderer.send("save-settings", settings);
+  }
+
   public async startServer(folderPath: string): Promise<number> {
-    const port = startingPort + this.servers.length;
+    let port = startingPort;
+    while (this.servers.find((serverRecord) => serverRecord.port === port)) {
+      port++;
+    }
+
     const server = startServer(port, folderPath);
     const serverRecord = { port, folderPath, server };
     this.servers.push(serverRecord);

@@ -9,7 +9,13 @@ export interface ServerRecord extends ServerPortAndFolderPath {
   server: Server;
 }
 
+export interface Settings {
+  servers: ServerPortAndFolderPath[];
+}
+
 export interface GmsNotebookNamespace {
+  saveSettings(): void;
+  getServers(): ServerPortAndFolderPath[];
   startServer(folderPath: string): Promise<number>;
   stopServer(port: number): Promise<void>;
   stopAllServers(): Promise<void>;
