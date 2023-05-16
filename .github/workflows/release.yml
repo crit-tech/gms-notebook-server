@@ -1,0 +1,29 @@
+name: Release Electron Binaries
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      - run: npm ci
+      - run: npm run make
+      - uses: AButler/upload-release-assets@v2.0
+        with:
+          files: "out/make/deb/x64/*.deb;out/make/rpm/x64/*.rpm;out/make/squirrel.windows/x64/*;out/make/zip/darwin/x64/*.zip"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
