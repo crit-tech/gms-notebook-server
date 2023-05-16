@@ -39,7 +39,7 @@ const createWindow = (): void => {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: true,
       contextIsolation: false,
-      additionalArguments: [JSON.stringify(settings)],
+      additionalArguments: [JSON.stringify(settings), app.getPath("temp")],
     },
   });
 

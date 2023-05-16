@@ -15,15 +15,18 @@ const startingPort = 3001;
 
 export class GmsNotebookServers implements GmsNotebookNamespace {
   private servers: ServerRecord[] = [];
+  private tempDir: string;
 
   constructor() {
     let settings: Settings = { servers: [] };
     try {
-      const settingsString = process.argv[process.argv.length - 1];
+      const settingsString = process.argv[process.argv.length - 2];
       settings = JSON.parse(settingsString);
     } catch (e) {
       // Ignore
     }
+
+    this.tempDir = process.argv[process.argv.length - 1];
 
     settings.servers.forEach((serverRecord) => {
       this.startServer(serverRecord.folderPath);
@@ -50,7 +53,7 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
       port++;
     }
 
-    const server = startServer(port, folderPath);
+    const server = startServer(port, folderPath, this.tempDir);
     const serverRecord = { port, folderPath, server };
     this.servers.push(serverRecord);
     return port;
