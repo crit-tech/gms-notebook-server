@@ -27,5 +27,5 @@ jobs:
       - run: npm run make
       - uses: AButler/upload-release-assets@v2.0
         with:
-          files: "out/make/deb/x64/*.deb;out/make/rpm/x64/*.rpm;out/make/squirrel.windows/x64/*;out/make/zip/darwin/x64/*.zip"
+          files: "out/make/deb/x64/*.deb;out/make/rpm/x64/*.rpm;out/make/squirrel.windows/x64/*.exe;out/make/zip/darwin/x64/*.zip"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
