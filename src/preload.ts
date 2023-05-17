@@ -20,13 +20,19 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
   constructor() {
     let settings: Settings = { servers: [] };
     try {
-      const settingsString = process.argv[process.argv.length - 2];
+      const settingsString = process.argv
+        .find((arg) => arg.startsWith("--settings="))
+        .substring(11);
+      console.log("Settings:", settingsString);
       settings = JSON.parse(settingsString);
     } catch (e) {
       // Ignore
     }
 
-    this.tempDir = process.argv[process.argv.length - 1];
+    this.tempDir = process.argv
+      .find((arg) => arg.startsWith("--tempdir="))
+      .substring(10);
+    console.log("Temp Dir:", this.tempDir);
 
     settings.servers.forEach((serverRecord) => {
       this.startServer(serverRecord.folderPath);
