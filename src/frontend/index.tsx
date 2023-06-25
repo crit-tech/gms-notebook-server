@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
@@ -28,6 +28,17 @@ export function Frontend() {
     await window.GmsNotebook.stopServer(port);
     setServers((servers) => servers.filter((s) => s.port !== port));
     window.GmsNotebook.saveSettings();
+  }, []);
+
+  const toggleIndexingHandler = useCallback(async (port: number) => {
+    window.GmsNotebook.toggleIndexing(port);
+    setServers(window.GmsNotebook.getServers());
+  }, []);
+
+  useEffect(() => {
+    window.GmsNotebook.onServersRefreshed((newServers: ServerConfig[]) => {
+      setServers(newServers);
+    });
   }, []);
 
   return (
@@ -62,7 +73,11 @@ export function Frontend() {
             enabled?
           </Typography>
         </Box>
-        <ServerList servers={servers} deleteHandler={deleteHandler} />
+        <ServerList
+          servers={servers}
+          deleteHandler={deleteHandler}
+          toggleIndexingHandler={toggleIndexingHandler}
+        />
       </Container>
     </ThemeProvider>
   );

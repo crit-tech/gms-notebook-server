@@ -3,8 +3,9 @@ import type { Server } from "gms-notebook-file-server";
 export interface ServerConfig {
   port: number;
   folderPath: string;
-  connected?: boolean;
-  indexingKey?: string;
+  connected: boolean;
+  indexingEnabled: boolean;
+  indexingKey: string;
 }
 
 export interface ServerRecord extends ServerConfig {
@@ -18,10 +19,12 @@ export interface Settings {
 export interface GmsNotebookNamespace {
   saveSettings(): void;
   getServers(): ServerConfig[];
-  startServer(folderPath: string): Promise<number>;
+  startServer(server: ServerConfig): Promise<number>;
   stopServer(port: number): Promise<void>;
   stopAllServers(): Promise<void>;
   chooseFolder(): Promise<ServerConfig | undefined>;
+  onServersRefreshed(callback: (newServers: ServerConfig[]) => void): void;
+  toggleIndexing(port: number): void;
 }
 
 declare global {

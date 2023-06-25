@@ -8,9 +8,14 @@ import type { ServerConfig } from "../../types";
 interface Props {
   servers: ServerConfig[];
   deleteHandler: (port: number) => void;
+  toggleIndexingHandler: (port: number) => void;
 }
 
-export function ServerList({ servers, deleteHandler }: Props) {
+export function ServerList({
+  servers,
+  deleteHandler,
+  toggleIndexingHandler,
+}: Props) {
   return (
     <>
       {servers.length === 0 && (
@@ -26,6 +31,7 @@ export function ServerList({ servers, deleteHandler }: Props) {
               key={server.port}
               server={server}
               deleteHandler={deleteHandler}
+              toggleIndexingHandler={toggleIndexingHandler}
             />
           ))}
       </List>

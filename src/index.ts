@@ -30,10 +30,12 @@ if (fs.existsSync(settingsFile)) {
 console.debug("temp", app.getPath("temp"));
 
 const createWindow = (): void => {
+  const showDevTools = !!process.env["GMN_SHOW_DEV_TOOLS"] ?? false;
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     height: 600,
-    width: 800,
+    width: showDevTools ? 1369 : 800,
     autoHideMenuBar: true,
     icon: "./images/icon.png",
     title: "GM's Notebook Local Server",
@@ -52,7 +54,7 @@ const createWindow = (): void => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  if (showDevTools) mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished

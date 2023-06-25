@@ -5,6 +5,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Switch from "@mui/material/Switch";
+import { green } from "@mui/material/colors";
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -15,32 +16,31 @@ import type { ServerConfig } from "../../types";
 interface Props {
   server: ServerConfig;
   deleteHandler: (port: number) => void;
+  toggleIndexingHandler: (port: number) => void;
 }
 
-export function Server({ server, deleteHandler }: Props) {
-  const [checked, setChecked] = useState<boolean>(!!server.indexingKey);
-
-  const handleToggle = useCallback(() => {
-    setChecked((prev) => !prev);
-  }, []);
-
+export function Server({
+  server,
+  deleteHandler,
+  toggleIndexingHandler,
+}: Props) {
   return (
     <ListItem key={server.port}>
       <ListItemAvatar>
-        <Avatar>
-          (
-          {server.connected ? (
+        {server.connected ? (
+          <Avatar sx={{ bgcolor: green[500] }}>
             <FolderIcon />
-          ) : (
+          </Avatar>
+        ) : (
+          <Avatar>
             <IconButton
               onClick={() => alert("connect!")}
               title="Not connected. Click to connect."
             >
               <FolderOffIcon />
             </IconButton>
-          )}
-          )
-        </Avatar>
+          </Avatar>
+        )}
       </ListItemAvatar>{" "}
       <ListItemText
         primary={`http://localhost:${server.port}`}
@@ -51,12 +51,15 @@ export function Server({ server, deleteHandler }: Props) {
       </IconButton>
       <Switch
         edge="end"
-        onChange={handleToggle}
-        checked={checked}
+        disabled={!server.connected}
+        onChange={() => toggleIndexingHandler(server.port)}
+        checked={server.indexingEnabled}
         inputProps={{
           "aria-labelledby": "switch-list-label",
         }}
-        title="Search enabled"
+        title={
+          "Search enabled" + (server.connected ? "" : " (please connect first)")
+        }
       />
     </ListItem>
   );
