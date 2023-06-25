@@ -6,7 +6,7 @@ import { ipcRenderer, IpcRendererEvent } from "electron";
 
 import {
   GmsNotebookNamespace,
-  ServerPortAndFolderPath,
+  ServerConfig,
   ServerRecord,
   Settings,
 } from "./types";
@@ -39,7 +39,7 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     });
   }
 
-  public getServers(): ServerPortAndFolderPath[] {
+  public getServers(): ServerConfig[] {
     return this.servers.map((serverRecord) => ({
       port: serverRecord.port,
       folderPath: serverRecord.folderPath,
@@ -87,8 +87,8 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     this.servers = [];
   }
 
-  public chooseFolder(): Promise<ServerPortAndFolderPath> {
-    return new Promise<ServerPortAndFolderPath>((resolve) => {
+  public chooseFolder(): Promise<ServerConfig> {
+    return new Promise<ServerConfig>((resolve) => {
       ipcRenderer.once(
         "folder-chosen",
         async (event: IpcRendererEvent, arg: string) => {

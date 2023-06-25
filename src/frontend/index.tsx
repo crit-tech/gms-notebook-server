@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -8,10 +9,10 @@ import { lightTheme } from "./theme";
 import { Heading } from "./components/heading";
 import { ServerList } from "./components/server-list";
 
-import type { ServerPortAndFolderPath } from "../types";
+import type { ServerConfig } from "../types";
 
 export function Frontend() {
-  const [servers, setServers] = useState<ServerPortAndFolderPath[]>(
+  const [servers, setServers] = useState<ServerConfig[]>(
     window.GmsNotebook.getServers()
   );
 
@@ -42,9 +43,25 @@ export function Frontend() {
         >
           Add local folder
         </Button>
-        <Typography variant="h2" sx={{ fontSize: "1.5rem" }}>
-          Running servers:
-        </Typography>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          width="100%"
+        >
+          <Typography variant="h2" sx={{ fontSize: "1.5rem" }}>
+            Running servers:
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            sx={{ fontWeight: "bold", textAlign: "right" }}
+            id="switch-list-label"
+          >
+            Search
+            <br />
+            enabled?
+          </Typography>
+        </Box>
         <ServerList servers={servers} deleteHandler={deleteHandler} />
       </Container>
     </ThemeProvider>

@@ -3,10 +3,10 @@ import Typography from "@mui/material/Typography";
 
 import { Server } from "./server";
 
-import type { ServerPortAndFolderPath } from "../../types";
+import type { ServerConfig } from "../../types";
 
 interface Props {
-  servers: ServerPortAndFolderPath[];
+  servers: ServerConfig[];
   deleteHandler: (port: number) => void;
 }
 
@@ -18,7 +18,7 @@ export function ServerList({ servers, deleteHandler }: Props) {
           No servers running. Click "ADD LOCAL FOLDER" to add one.
         </Typography>
       )}
-      <List sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}>
+      <List sx={{ width: "100%", bgcolor: "background.paper" }}>
         {servers
           .sort((a, b) => a.port - b.port)
           .map((server) => (
