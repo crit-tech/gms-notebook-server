@@ -1,18 +1,12 @@
 import React, { useCallback, useState } from "react";
-import {
-  Avatar,
-  Button,
-  Container,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Typography,
-} from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
 import { ThemeProvider } from "@mui/material/styles";
+
 import { lightTheme } from "./theme";
+import { Heading } from "./components/heading";
+import { ServerList } from "./components/server-list";
 
 import type { ServerPortAndFolderPath } from "../types";
 
@@ -38,16 +32,7 @@ export function Frontend() {
   return (
     <ThemeProvider theme={lightTheme}>
       <Container>
-        <Typography
-          variant="h1"
-          sx={{
-            fontSize: "2rem",
-            marginTop: "2rem",
-            marginBottom: "2rem",
-          }}
-        >
-          GM's Notebook Local Server
-        </Typography>
+        <Heading />
         <Button
           variant="contained"
           onClick={clickHandler}
@@ -60,32 +45,7 @@ export function Frontend() {
         <Typography variant="h2" sx={{ fontSize: "1.5rem" }}>
           Running servers:
         </Typography>
-        {servers.length === 0 && (
-          <Typography variant="h3" sx={{ fontSize: "1rem", marginTop: "1rem" }}>
-            No servers running. Click "ADD LOCAL FOLDER" to add one.
-          </Typography>
-        )}
-        <List
-          sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
-        >
-          {servers
-            .sort((a, b) => a.port - b.port)
-            .map((server) => (
-              <ListItem key={server.port}>
-                <ListItemAvatar>
-                  <Avatar>
-                    <IconButton onClick={() => deleteHandler(server.port)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={`http://localhost:${server.port}`}
-                  secondary={server.folderPath}
-                />
-              </ListItem>
-            ))}
-        </List>
+        <ServerList servers={servers} deleteHandler={deleteHandler} />
       </Container>
     </ThemeProvider>
   );
