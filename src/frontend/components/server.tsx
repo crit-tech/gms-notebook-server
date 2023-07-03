@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
 import ListItem from "@mui/material/ListItem";
@@ -24,6 +24,10 @@ export function Server({
   deleteHandler,
   toggleIndexingHandler,
 }: Props) {
+  const connectHandler = useCallback(async () => {
+    window.GmsNotebook.openConnect(server.port);
+  }, [server.port]);
+
   return (
     <ListItem key={server.port}>
       <ListItemAvatar>
@@ -34,14 +38,14 @@ export function Server({
         ) : (
           <Avatar>
             <IconButton
-              onClick={() => alert("connect!")}
+              onClick={connectHandler}
               title="Not connected. Click to connect."
             >
               <FolderOffIcon />
             </IconButton>
           </Avatar>
         )}
-      </ListItemAvatar>{" "}
+      </ListItemAvatar>
       <ListItemText
         primary={`http://localhost:${server.port}`}
         secondary={server.folderPath}

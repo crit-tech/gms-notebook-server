@@ -6,6 +6,7 @@ export interface ServerConfig {
   connected: boolean;
   indexingEnabled: boolean;
   indexingKey: string;
+  providerId: string;
 }
 
 export interface ServerRecord extends ServerConfig {
@@ -25,6 +26,7 @@ export interface GmsNotebookNamespace {
   chooseFolder(): Promise<ServerConfig | undefined>;
   onServersRefreshed(callback: (newServers: ServerConfig[]) => void): void;
   toggleIndexing(port: number): void;
+  openConnect(port: number): void;
 }
 
 declare global {

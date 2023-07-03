@@ -58,6 +58,7 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
       connected: serverRecord.connected,
       indexingEnabled: serverRecord.indexingEnabled,
       indexingKey: serverRecord.indexingKey,
+      providerId: serverRecord.providerId,
     }));
   }
 
@@ -103,8 +104,13 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     }
 
     const newServer = startServer(
-      port,
-      server.folderPath,
+      {
+        port,
+        folder: server.folderPath,
+        indexingEnabled: server.indexingEnabled,
+        indexingKey: server.indexingKey,
+        providerId: server.providerId,
+      },
       this.tempDir,
       this.serverEventHandler.bind(this)
     );
@@ -146,6 +152,7 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
             connected: false,
             indexingEnabled: false,
             indexingKey: "",
+            providerId: "",
           };
           newServer.port = await this.startServer(newServer);
           resolve(newServer);
@@ -170,6 +177,10 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     }
     serverRecord.indexingEnabled = !serverRecord.indexingEnabled;
     this.saveSettings();
+  }
+
+  public openConnect(port: number): void {
+    ipcRenderer.send("open-connect", port);
   }
 }
 
