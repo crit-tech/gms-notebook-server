@@ -1,21 +1,32 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
-import { startServer } from "gms-notebook-file-server";
+import { startServer, Event } from "gms-notebook-file-server";
 import { ipcRenderer, IpcRendererEvent } from "electron";
 
 import {
   GmsNotebookNamespace,
-  ServerPortAndFolderPath,
+  ServerConfig,
   ServerRecord,
   Settings,
 } from "./types";
+
+interface ConnectEvent {
+  type: "connect";
+  payload: {
+    port: number;
+    indexingKey: string;
+    providerId: string;
+  };
+}
 
 const startingPort = 3001;
 
 export class GmsNotebookServers implements GmsNotebookNamespace {
   private servers: ServerRecord[] = [];
   private tempDir: string;
+  private onServersRefreshedCallback: (newServers: ServerConfig[]) => void;
+  private onLogMessageCallback: (message: string) => void;
 
   constructor() {
     let settings: Settings = { servers: [] };
@@ -34,15 +45,22 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
       .substring(10);
     console.log("Temp Dir:", this.tempDir);
 
-    settings.servers.forEach((serverRecord) => {
-      this.startServer(serverRecord.folderPath);
+    settings.servers.forEach((server) => {
+      server.connected = !!server.connected;
+      server.indexingEnabled = !!server.indexingEnabled;
+      server.indexingKey = server.indexingKey ?? "";
+      this.startServer(server);
     });
   }
 
-  public getServers(): ServerPortAndFolderPath[] {
+  public getServers(): ServerConfig[] {
     return this.servers.map((serverRecord) => ({
       port: serverRecord.port,
       folderPath: serverRecord.folderPath,
+      connected: serverRecord.connected,
+      indexingEnabled: serverRecord.indexingEnabled,
+      indexingKey: serverRecord.indexingKey,
+      providerId: serverRecord.providerId,
     }));
   }
 
@@ -53,14 +71,71 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     ipcRenderer.send("save-settings", settings);
   }
 
-  public async startServer(folderPath: string): Promise<number> {
+  public onServersRefreshed(
+    callback: (newServers: ServerConfig[]) => void
+  ): void {
+    this.onServersRefreshedCallback = callback;
+  }
+
+  public onLogMessage(callback: (message: string) => void): void {
+    this.onLogMessageCallback = callback;
+  }
+
+  serverEventHandler(event: Event) {
+    if (event.type === "log") {
+      if (this.onLogMessageCallback) {
+        this.onLogMessageCallback(event.payload);
+      }
+      return;
+    }
+
+    if (event.type === "error") {
+      if (this.onLogMessageCallback) {
+        this.onLogMessageCallback("ERROR: " + event.payload);
+      }
+      return;
+    }
+
+    if (event.type !== "connect") {
+      console.log("Unhandled event:", event);
+      return;
+    }
+
+    const connectEvent = event as ConnectEvent;
+    const serverRecord = this.servers.find(
+      (serverRecord) => serverRecord.port === connectEvent.payload.port
+    );
+    if (!serverRecord) {
+      console.error("Server not found:", connectEvent.payload.port);
+      return;
+    }
+    serverRecord.connected = true;
+    serverRecord.indexingKey = connectEvent.payload.indexingKey;
+    serverRecord.providerId = connectEvent.payload.providerId;
+    this.saveSettings();
+    if (this.onServersRefreshedCallback) {
+      this.onServersRefreshedCallback(this.getServers());
+    }
+  }
+
+  public async startServer(server: ServerConfig): Promise<number> {
     let port = startingPort;
     while (this.servers.find((serverRecord) => serverRecord.port === port)) {
       port++;
     }
 
-    const server = startServer(port, folderPath, this.tempDir);
-    const serverRecord = { port, folderPath, server };
+    const newServer = startServer(
+      {
+        port,
+        folder: server.folderPath,
+        indexingEnabled: server.indexingEnabled,
+        indexingKey: server.indexingKey,
+        providerId: server.providerId,
+      },
+      this.tempDir,
+      this.serverEventHandler.bind(this)
+    );
+    const serverRecord = { ...server, port, server: newServer };
     this.servers.push(serverRecord);
     return port;
   }
@@ -87,13 +162,21 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     this.servers = [];
   }
 
-  public chooseFolder(): Promise<ServerPortAndFolderPath> {
-    return new Promise<ServerPortAndFolderPath>((resolve) => {
+  public chooseFolder(): Promise<ServerConfig> {
+    return new Promise<ServerConfig>((resolve) => {
       ipcRenderer.once(
         "folder-chosen",
         async (event: IpcRendererEvent, arg: string) => {
-          const port = await this.startServer(arg);
-          resolve({ port, folderPath: arg });
+          const newServer: ServerConfig = {
+            port: 0,
+            folderPath: arg,
+            connected: false,
+            indexingEnabled: false,
+            indexingKey: "",
+            providerId: "",
+          };
+          newServer.port = await this.startServer(newServer);
+          resolve(newServer);
         }
       );
 
@@ -103,6 +186,22 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
 
       ipcRenderer.send("choose-folder");
     });
+  }
+
+  public toggleIndexing(port: number): Promise<void> {
+    const serverRecord = this.servers.find(
+      (serverRecord) => serverRecord.port === port
+    );
+    if (!serverRecord) {
+      console.error("Server not found:", port);
+      return;
+    }
+    serverRecord.indexingEnabled = !serverRecord.indexingEnabled;
+    this.saveSettings();
+  }
+
+  public openConnect(port: number): void {
+    ipcRenderer.send("open-connect", port);
   }
 }
 
