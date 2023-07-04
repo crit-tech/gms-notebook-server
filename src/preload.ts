@@ -16,6 +16,7 @@ interface ConnectEvent {
   payload: {
     port: number;
     indexingKey: string;
+    providerId: string;
   };
 }
 
@@ -77,7 +78,9 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
 
   serverEventHandler(event: Event) {
     if (event.type !== "connect") {
-      console.log("Unhandled event:", event);
+      if (event.type !== "log") {
+        console.log("Unhandled event:", event);
+      }
       return;
     }
 
@@ -91,6 +94,7 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     }
     serverRecord.connected = true;
     serverRecord.indexingKey = connectEvent.payload.indexingKey;
+    serverRecord.providerId = connectEvent.payload.providerId;
     this.saveSettings();
     if (this.onServersRefreshedCallback) {
       this.onServersRefreshedCallback(this.getServers());
