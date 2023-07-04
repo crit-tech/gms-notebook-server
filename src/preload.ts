@@ -26,6 +26,7 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
   private servers: ServerRecord[] = [];
   private tempDir: string;
   private onServersRefreshedCallback: (newServers: ServerConfig[]) => void;
+  private onLogMessageCallback: (message: string) => void;
 
   constructor() {
     let settings: Settings = { servers: [] };
@@ -76,11 +77,27 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     this.onServersRefreshedCallback = callback;
   }
 
+  public onLogMessage(callback: (message: string) => void): void {
+    this.onLogMessageCallback = callback;
+  }
+
   serverEventHandler(event: Event) {
-    if (event.type !== "connect") {
-      if (event.type !== "log") {
-        console.log("Unhandled event:", event);
+    if (event.type === "log") {
+      if (this.onLogMessageCallback) {
+        this.onLogMessageCallback(event.payload);
       }
+      return;
+    }
+
+    if (event.type === "error") {
+      if (this.onLogMessageCallback) {
+        this.onLogMessageCallback("ERROR: " + event.payload);
+      }
+      return;
+    }
+
+    if (event.type !== "connect") {
+      console.log("Unhandled event:", event);
       return;
     }
 

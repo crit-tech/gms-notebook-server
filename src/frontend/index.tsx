@@ -15,6 +15,7 @@ export function Frontend() {
   const [servers, setServers] = useState<ServerConfig[]>(
     window.GmsNotebook.getServers()
   );
+  const [logMessage, setLogMessage] = useState<string>("");
 
   const clickHandler = useCallback(async () => {
     const item = await window.GmsNotebook.chooseFolder();
@@ -38,6 +39,9 @@ export function Frontend() {
   useEffect(() => {
     window.GmsNotebook.onServersRefreshed((newServers: ServerConfig[]) => {
       setServers(newServers);
+    });
+    window.GmsNotebook.onLogMessage((message: string) => {
+      setLogMessage(message);
     });
   }, []);
 
@@ -78,6 +82,9 @@ export function Frontend() {
           deleteHandler={deleteHandler}
           toggleIndexingHandler={toggleIndexingHandler}
         />
+        <Box sx={{ marginTop: "2rem" }}>
+          <Typography variant="body1">{logMessage}</Typography>
+        </Box>
       </Container>
     </ThemeProvider>
   );

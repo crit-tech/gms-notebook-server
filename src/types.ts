@@ -25,6 +25,7 @@ export interface GmsNotebookNamespace {
   stopAllServers(): Promise<void>;
   chooseFolder(): Promise<ServerConfig | undefined>;
   onServersRefreshed(callback: (newServers: ServerConfig[]) => void): void;
+  onLogMessage(callback: (message: string) => void): void;
   toggleIndexing(port: number): void;
   openConnect(port: number): void;
 }
