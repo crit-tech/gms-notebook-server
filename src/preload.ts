@@ -1,15 +1,10 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
-import { startServer, Event } from "gms-notebook-file-server";
+import { Event } from "./backend/server";
 import { ipcRenderer, IpcRendererEvent } from "electron";
 
-import {
-  GmsNotebookNamespace,
-  ServerConfig,
-  ServerRecord,
-  Settings,
-} from "./types";
+import { GmsNotebookNamespace, ServerConfig, Settings } from "./types";
 
 interface ConnectEvent {
   type: "connect";
@@ -23,27 +18,14 @@ interface ConnectEvent {
 const startingPort = 3001;
 
 export class GmsNotebookServers implements GmsNotebookNamespace {
-  private servers: ServerRecord[] = [];
-  private tempDir: string;
+  private servers: ServerConfig[] = [];
   private onServersRefreshedCallback: (newServers: ServerConfig[]) => void;
   private onLogMessageCallback: (message: string) => void;
 
-  constructor() {
-    let settings: Settings = { servers: [] };
-    try {
-      const settingsString = process.argv
-        .find((arg) => arg.startsWith("--settings="))
-        .substring(11);
-      console.log("Settings:", settingsString);
-      settings = JSON.parse(settingsString);
-    } catch (e) {
-      // Ignore
-    }
-
-    this.tempDir = process.argv
-      .find((arg) => arg.startsWith("--tempdir="))
-      .substring(10);
-    console.log("Temp Dir:", this.tempDir);
+  constructor(settings: Settings) {
+    ipcRenderer.on("server-event-received", (_, event) => {
+      this.serverEventHandler(event);
+    });
 
     settings.servers.forEach((server) => {
       server.connected = !!server.connected;
@@ -54,14 +36,7 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
   }
 
   public getServers(): ServerConfig[] {
-    return this.servers.map((serverRecord) => ({
-      port: serverRecord.port,
-      folderPath: serverRecord.folderPath,
-      connected: serverRecord.connected,
-      indexingEnabled: serverRecord.indexingEnabled,
-      indexingKey: serverRecord.indexingKey,
-      providerId: serverRecord.providerId,
-    }));
+    return this.servers;
   }
 
   public saveSettings(): void {
@@ -69,6 +44,9 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
       servers: this.getServers(),
     };
     ipcRenderer.send("save-settings", settings);
+    if (this.onServersRefreshedCallback) {
+      this.onServersRefreshedCallback(this.servers);
+    }
   }
 
   public onServersRefreshed(
@@ -113,9 +91,15 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     serverRecord.indexingKey = connectEvent.payload.indexingKey;
     serverRecord.providerId = connectEvent.payload.providerId;
     this.saveSettings();
-    if (this.onServersRefreshedCallback) {
-      this.onServersRefreshedCallback(this.getServers());
-    }
+  }
+
+  private reloadTimer: NodeJS.Timeout;
+
+  private reloadServerDebounced(serverRecord: ServerConfig) {
+    clearTimeout(this.reloadTimer);
+    this.reloadTimer = setTimeout(() => {
+      ipcRenderer.send("reload-server", serverRecord);
+    }, 1000);
   }
 
   public async startServer(server: ServerConfig): Promise<number> {
@@ -124,19 +108,16 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
       port++;
     }
 
-    const newServer = startServer(
-      {
-        port,
-        folder: server.folderPath,
-        indexingEnabled: server.indexingEnabled,
-        indexingKey: server.indexingKey,
-        providerId: server.providerId,
-      },
-      this.tempDir,
-      this.serverEventHandler.bind(this)
-    );
-    const serverRecord = { ...server, port, server: newServer };
-    this.servers.push(serverRecord);
+    server.port = server.port === 0 ? port : server.port;
+
+    await new Promise((resolve) => {
+      ipcRenderer.once("server-started", resolve);
+      ipcRenderer.send("start-server", server);
+    });
+
+    this.servers.push(server);
+    this.saveSettings();
+
     return port;
   }
 
@@ -145,19 +126,20 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
       (serverRecord) => serverRecord.port === port
     );
     if (serverRecord) {
-      await new Promise((resolve) => serverRecord.server.close(resolve));
+      await new Promise((resolve) => {
+        ipcRenderer.once("server-stopped", resolve);
+        ipcRenderer.send("stop-server", serverRecord);
+      });
       this.servers = this.servers.filter(
         (serverRecord) => serverRecord.port !== port
       );
+      this.saveSettings();
     }
   }
 
   public async stopAllServers(): Promise<void> {
     await Promise.all(
-      this.servers.map(
-        (serverRecord) =>
-          new Promise((resolve) => serverRecord.server.close(resolve))
-      )
+      this.servers.map((serverRecord) => this.stopServer(serverRecord.port))
     );
     this.servers = [];
   }
@@ -198,6 +180,7 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     }
     serverRecord.indexingEnabled = !serverRecord.indexingEnabled;
     this.saveSettings();
+    this.reloadServerDebounced(serverRecord);
   }
 
   public openConnect(port: number): void {
@@ -205,4 +188,6 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
   }
 }
 
-window.GmsNotebook = new GmsNotebookServers();
+ipcRenderer.on("settings-loaded", (_, settings) => {
+  window.GmsNotebook = new GmsNotebookServers(settings);
+});

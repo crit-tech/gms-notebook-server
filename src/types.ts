@@ -1,5 +1,3 @@
-import type { Server } from "gms-notebook-file-server";
-
 export interface ServerConfig {
   port: number;
   folderPath: string;
@@ -7,10 +5,6 @@ export interface ServerConfig {
   indexingEnabled: boolean;
   indexingKey: string;
   providerId: string;
-}
-
-export interface ServerRecord extends ServerConfig {
-  server: Server;
 }
 
 export interface Settings {
