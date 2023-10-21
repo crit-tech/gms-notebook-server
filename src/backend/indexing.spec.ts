@@ -2,7 +2,7 @@
 
 import path from "path";
 import nock from "nock";
-import { test } from "vitest";
+import { test, expect } from "vitest";
 
 import fetch, {
   Blob,
@@ -33,9 +33,9 @@ g.FormData = FormData;
 
 import { FileType } from "./types";
 import { IndexingServer, FileToProcess } from "./indexing";
+import { testFilesPath } from "./utils";
 
 const testPort = 3001;
-const folder = path.resolve("./backend/test-files");
 
 const comparer = (a: FileToProcess, b: FileToProcess) => {
   return a.id.localeCompare(b.id);
@@ -43,67 +43,67 @@ const comparer = (a: FileToProcess, b: FileToProcess) => {
 
 const expectedFiles: FileToProcess[] = [
   {
-    path: path.resolve(folder, "Hello.md"),
+    path: path.resolve(testFilesPath, "Hello.md"),
     id: "/hello.md",
     contentHash: "a2c6c9c65b88ede7d27047e8cfdf64f0",
     fileType: "markdown" as FileType,
   },
   {
-    path: path.resolve(folder, "delete_this_folder/.keep"),
+    path: path.resolve(testFilesPath, "delete_this_folder/.keep"),
     id: "/delete_this_folder/.keep",
     contentHash: "d41d8cd98f00b204e9800998ecf8427e",
     fileType: "unknown" as FileType,
   },
   {
-    path: path.resolve(folder, "samples/delete_me.md"),
+    path: path.resolve(testFilesPath, "samples/delete_me.md"),
     id: "/samples/delete_me.md",
     contentHash: "ddebcec5e4e68877d75d3e2ea6fe4851",
     fileType: "markdown" as FileType,
   },
   {
-    path: path.resolve(folder, "samples/CoolStuff.md"),
+    path: path.resolve(testFilesPath, "samples/CoolStuff.md"),
     id: "/samples/coolstuff.md",
     contentHash: "25236fa95e5ff64e4ee1471acc2f848f",
     fileType: "markdown" as FileType,
   },
   {
-    path: path.resolve(folder, "samples/foo.xfdf"),
+    path: path.resolve(testFilesPath, "samples/foo.xfdf"),
     id: "/samples/foo.xfdf",
     contentHash: "c8c908ccc3082b93ce17f471168c35d9",
     fileType: "xfdf" as FileType,
   },
   {
-    path: path.resolve(folder, "samples/markdown.md"),
+    path: path.resolve(testFilesPath, "samples/markdown.md"),
     id: "/samples/markdown.md",
     contentHash: "05bac749885cd01806a4cb7006ebba71",
     fileType: "markdown" as FileType,
   },
   {
-    path: path.resolve(folder, "samples/pixel.jpg"),
+    path: path.resolve(testFilesPath, "samples/pixel.jpg"),
     id: "/samples/pixel.jpg",
     contentHash: "8c90748342f19b195b9c6b4eff742ded",
     fileType: "image" as FileType,
   },
   {
-    path: path.resolve(folder, "samples/rename_me.md"),
+    path: path.resolve(testFilesPath, "samples/rename_me.md"),
     id: "/samples/rename_me.md",
     contentHash: "fcd26664b58eea14a417e9af320c34f9",
     fileType: "markdown" as FileType,
   },
   {
-    path: path.resolve(folder, "samples/rename_me_TOO.md"),
+    path: path.resolve(testFilesPath, "samples/rename_me_TOO.md"),
     id: "/samples/rename_me_too.md",
     contentHash: "9be2b60a54c49e9c8d40c84a8b85912e",
     fileType: "markdown" as FileType,
   },
   {
-    path: path.resolve(folder, "subdirectory/another.md"),
+    path: path.resolve(testFilesPath, "subdirectory/another.md"),
     id: "/subdirectory/another.md",
     contentHash: "2ddd8ec1cbcd294b5f62dd29ec50de69",
     fileType: "markdown" as FileType,
   },
   {
-    path: path.resolve(folder, "samples/Test.pdf"),
+    path: path.resolve(testFilesPath, "samples/Test.pdf"),
     id: "/samples/test.pdf",
     contentHash: "2433f48a4c5bb0c72baa2a64a54f4663",
     fileType: "pdf" as FileType,
@@ -112,7 +112,12 @@ const expectedFiles: FileToProcess[] = [
 
 test("scan folder", async () => {
   const server = new IndexingServer(
-    { port: testPort, folder, indexingEnabled: false, providerId: "local_1" },
+    {
+      port: testPort,
+      folder: testFilesPath,
+      indexingEnabled: false,
+      providerId: "local_1",
+    },
     () => {}
   );
   const files = await server.scanFolder("/");
@@ -178,7 +183,7 @@ test("run indexing", async () => {
   const server = new IndexingServer(
     {
       port: testPort,
-      folder,
+      folder: testFilesPath,
       indexingEnabled: true,
       indexingKey: "test-key",
       providerId: "local_1",

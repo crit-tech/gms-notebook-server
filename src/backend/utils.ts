@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { glob } from "glob";
 
 // Helps with case-(in)sensitive file systems
@@ -36,3 +37,5 @@ export const pathExists = async (filePath: string): Promise<boolean> => {
   }
   return true;
 };
+
+export const testFilesPath = path.resolve(__dirname, "./test-files");
