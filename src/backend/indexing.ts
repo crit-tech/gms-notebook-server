@@ -3,10 +3,10 @@ import fs from "fs";
 import path from "path";
 import { isNotJunk } from "junk";
 import slash from "slash";
+import fetch, { Response } from "node-fetch";
 //import Queue from "queue";
-// import pdf2text from "@crit-tech/pdf2text";
-import pdf2text from "./pdf2text";
 
+import pdf2text from "./pdf2text";
 import { Logger, ServerOptions, FileType, getFileType } from "./types";
 
 export type FileToProcess = {
@@ -165,11 +165,12 @@ export class IndexingServer {
         `Error running indexing: ${response.status} ${response.statusText}`,
         "error"
       );
+      console.log(response.url);
       return;
     }
 
     const json = await response.json();
-    const changedFiles = json.changedFiles as string[];
+    const changedFiles = (json as any).changedFiles as string[];
     const filesToIndex = files.filter((file) => changedFiles.includes(file.id));
 
     // const q = new Queue({ concurrency: 10 });
@@ -198,7 +199,6 @@ export class IndexingServer {
       this.log(`Triggering an indexing run`);
       try {
         await this.runIndexing();
-        console.log("What is going on");
         this.log(`Indexing complete`);
       } catch (e: any) {
         this.log(`Error running indexing: ${e.message}`, "error");

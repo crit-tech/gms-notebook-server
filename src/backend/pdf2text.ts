@@ -1,41 +1,57 @@
-import PDFParser from "@crit-tech/pdf2json4electron";
+import { promises as fs } from "fs";
+import pdf from "pdf-parse-fork";
 
-export interface PdfTextDetail {
-  T: string;
+interface RenderOptions {
+  normalizeWhitespace: boolean;
+  disableCombineTextItems: boolean;
 }
 
-export interface PdfText {
-  x: number;
-  y: number;
-  w: number;
-  R: PdfTextDetail[];
+interface PageItem {
+  str: string;
+  transform: number[];
 }
 
-export interface PdfPage {
-  Texts: PdfText[];
+interface PageTextContent {
+  items: PageItem[];
 }
 
-export interface PdfData {
-  Pages: PdfPage[];
+interface PageData {
+  getTextContent: (renderOptions: RenderOptions) => Promise<PageTextContent>;
 }
 
 export const pdf2Text = async (localPdf: string): Promise<string[]> => {
-  const pdfData: PdfData = await new Promise<PdfData>((resolve, reject) => {
-    const pdfParser = new PDFParser();
-    pdfParser.on("pdfParser_dataError", (errData: unknown) => {
-      reject(errData);
-    });
-    pdfParser.on("pdfParser_dataReady", async (pdfData: PdfData) => {
-      resolve(pdfData);
-    });
-    pdfParser.loadPDF(localPdf);
-  });
+  const pdfData = await fs.readFile(localPdf);
 
-  return pdfData.Pages.map((page: PdfPage) =>
-    page.Texts.map((t) =>
-      t.R.map((r) => decodeURIComponent(r.T)).join("")
-    ).join("\n")
-  );
+  const pageText: string[] = [];
+
+  function renderPage(pageData: PageData): Promise<string> {
+    const renderOptions = {
+      //replaces all occurrences of whitespace with standard spaces (0x20). The default value is `false`.
+      normalizeWhitespace: true,
+      //do not attempt to combine same line TextItem's. The default value is `false`.
+      disableCombineTextItems: false,
+    };
+
+    return pageData.getTextContent(renderOptions).then((textContent) => {
+      let lastY,
+        text = "";
+      for (const item of textContent.items) {
+        if (lastY == item.transform[5] || !lastY) {
+          text += item.str;
+        } else {
+          text += "\n" + item.str;
+        }
+        lastY = item.transform[5];
+      }
+
+      pageText.push(text);
+      return text;
+    });
+  }
+
+  await pdf(pdfData, { pagerender: renderPage });
+
+  return pageText;
 };
 
 export default pdf2Text;
