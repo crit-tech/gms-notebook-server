@@ -172,12 +172,14 @@ test("run indexing", async () => {
       expect(
         JSON.parse(body.content).map((s: string) => s.replace(/\n/g, "").trim())
       ).toEqual([
-        "Test PDF documentThis is the first page.",
+        "Test PDF document  This is the first page.",
         "This is the second page.",
       ]);
 
       return true;
     })
+    .reply(204)
+    .post("/api/indexing/done")
     .reply(204);
 
   const server = new IndexingServer(

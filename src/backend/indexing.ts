@@ -4,7 +4,7 @@ import path from "path";
 import { isNotJunk } from "junk";
 import slash from "slash";
 import fetch, { Response } from "node-fetch";
-//import Queue from "queue";
+import Queue from "queue";
 
 import pdf2text from "./pdf2text";
 import { Logger, ServerOptions, FileType, getFileType } from "./types";
@@ -169,28 +169,48 @@ export class IndexingServer {
       return;
     }
 
-    const json = await response.json();
-    const changedFiles = (json as any).changedFiles as string[];
-    const filesToIndex = files.filter((file) => changedFiles.includes(file.id));
+    try {
+      const json = await response.json();
+      const changedFiles = (json as any).changedFiles as string[];
+      const filesToIndex = files.filter((file) =>
+        changedFiles.includes(file.id)
+      );
 
-    // const q = new Queue({ concurrency: 10 });
-    for (const file of filesToIndex) {
-      // q.push(async () => {
-      //   console.log("Q pre", file.id);
-      //   await this.indexFile(file);
-      //   console.log("Q post", file.id);
-      // });
-      await this.indexFile(file);
+      const q = new Queue({ concurrency: 10 });
+      for (const file of filesToIndex) {
+        q.push(async () => {
+          console.log("Q pre", file.id);
+          await this.indexFile(file);
+          console.log("Q post", file.id);
+        });
+        // await this.indexFile(file);
+      }
+
+      q.addEventListener("success", (e) => {
+        console.log("job finished processing:", e);
+        console.log("Queue length:", q.length);
+      });
+
+      await new Promise((resolve, reject) => {
+        q.start((err) => {
+          if (err) reject(err);
+          else resolve(null);
+        });
+      });
+
+      this.lastFullIndexTime = Date.now();
+    } finally {
+      this.log("Telling indexing service we're done");
+      response = await fetch(`${this.baseUrl}/api/indexing/done`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": this.indexingKey ?? "",
+          "x-port": this.port.toString(),
+          "x-provider-id": this.providerId ?? "",
+        },
+      });
     }
-
-    // q.addEventListener("success", (e) => {
-    //   console.log("job finished processing:", e);
-    //   console.log("Queue length:", q.length);
-    // });
-
-    // await q.start();
-
-    this.lastFullIndexTime = Date.now();
   }
 
   async checkTimer() {
