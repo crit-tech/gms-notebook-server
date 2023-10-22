@@ -1,25 +1,27 @@
-import type { Server } from "gms-notebook-file-server";
-
-export interface ServerPortAndFolderPath {
+export interface ServerConfig {
   port: number;
   folderPath: string;
-}
-
-export interface ServerRecord extends ServerPortAndFolderPath {
-  server: Server;
+  connected: boolean;
+  indexingEnabled: boolean;
+  indexingKey: string;
+  providerId: string;
 }
 
 export interface Settings {
-  servers: ServerPortAndFolderPath[];
+  servers: ServerConfig[];
 }
 
 export interface GmsNotebookNamespace {
   saveSettings(): void;
-  getServers(): ServerPortAndFolderPath[];
-  startServer(folderPath: string): Promise<number>;
+  getServers(): ServerConfig[];
+  startServer(server: ServerConfig): Promise<number>;
   stopServer(port: number): Promise<void>;
   stopAllServers(): Promise<void>;
-  chooseFolder(): Promise<ServerPortAndFolderPath | undefined>;
+  chooseFolder(): Promise<ServerConfig | undefined>;
+  onServersRefreshed(callback: (newServers: ServerConfig[]) => void): void;
+  onLogMessage(callback: (message: string) => void): void;
+  toggleIndexing(port: number): void;
+  openConnect(port: number): void;
 }
 
 declare global {
