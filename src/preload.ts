@@ -74,6 +74,11 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
       return;
     }
 
+    if (event.type === "search_index") {
+      this.toggleIndexing(event.payload.port, true);
+      return;
+    }
+
     if (event.type !== "connect") {
       console.log("Unhandled event:", event);
       return;
@@ -170,7 +175,7 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
     });
   }
 
-  public toggleIndexing(port: number): Promise<void> {
+  public toggleIndexing(port: number, forceOn?: boolean): Promise<void> {
     const serverRecord = this.servers.find(
       (serverRecord) => serverRecord.port === port
     );
@@ -178,7 +183,9 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
       console.error("Server not found:", port);
       return;
     }
-    serverRecord.indexingEnabled = !serverRecord.indexingEnabled;
+    serverRecord.indexingEnabled = forceOn
+      ? true
+      : !serverRecord.indexingEnabled;
     this.saveSettings();
     this.reloadServerDebounced(serverRecord);
   }

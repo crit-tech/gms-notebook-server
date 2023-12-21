@@ -50,6 +50,23 @@ export function startServer(
     res.send("<h1>GM's Notebook Local File Server</h1>");
   });
 
+  app.post("/api/search_index", async (req: Request, res: Response) => {
+    if (onEvent) {
+      onEvent({
+        type: "search_index",
+        payload: {
+          port,
+        },
+      });
+      return res.json({ success: true });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "No listener to accept event.",
+      });
+    }
+  });
+
   app.get("/api/files", async (req: Request, res: Response) => {
     try {
       const parentFolderPathParamValue =

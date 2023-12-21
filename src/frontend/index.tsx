@@ -11,22 +11,43 @@ import { ServerList } from "./components/server-list";
 
 import type { ServerConfig } from "../types";
 
-const LogContainer = styled("pre")(({ theme }) => ({
-  ...theme.typography.body2,
-  backgroundColor: theme.palette.background.paper,
-  padding: theme.spacing(1),
-  margin: theme.spacing(1),
-  overflow: "auto",
-  maxHeight: "5.75rem",
-}));
+function processLogs(logs: string) {
+  return logs
+    .split("\n")
+    .filter((line) => line)
+    .map((line, index) => (
+      <Box
+        sx={{
+          borderBottomStyle: "solid",
+          borderBottomWidth: "1px",
+          borderBottomColor: (theme) => theme.palette.grey[300],
+          paddingTop: "0.25rem",
+          paddingBottom: "0.25rem",
+          color: (theme) =>
+            line.startsWith("ERROR:")
+              ? theme.palette.error.dark
+              : theme.palette.grey[800],
+        }}
+        key={`log${index}`}
+      >
+        {line}
+      </Box>
+    ));
+}
 
 export function Frontend() {
   const [loaded, setLoaded] = useState(false);
   const [servers, setServers] = useState<ServerConfig[]>([]);
   const [logMessages, setLogMessages] = useState<string>("");
 
-  const clickHandler = useCallback(() => {
-    window.GmsNotebook.chooseFolder();
+  const addFolderHandler = useCallback(() => {
+    window.GmsNotebook.chooseFolder().then((server) => {
+      if (!server) return;
+      alert(
+        `Server added. Click OK to open your browser to connect to GM's Notebook.`
+      );
+      window.GmsNotebook.openConnect(server.port);
+    });
   }, []);
 
   const deleteHandler = useCallback((port: number) => {
@@ -62,45 +83,69 @@ export function Frontend() {
 
   return (
     <ThemeProvider theme={lightTheme}>
-      <Container>
-        <Heading />
-        <Button
-          variant="contained"
-          onClick={clickHandler}
+      <Container
+        sx={{
+          width: "100%",
+          minHeight: "100vh",
+          maxHeight: "100vh",
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gridTemplateRows: "max-content max-content 1fr",
+        }}
+      >
+        <Box>
+          <Heading />
+          <Button
+            variant="contained"
+            onClick={addFolderHandler}
+            sx={{
+              marginBottom: "2rem",
+            }}
+          >
+            Add local folder
+          </Button>
+        </Box>
+        <Box>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            width="100%"
+          >
+            <Typography variant="h2" sx={{ fontSize: "1.5rem" }}>
+              Running servers:
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: "bold", textAlign: "right" }}
+              id="switch-list-label"
+            >
+              Search
+              <br />
+              enabled?
+            </Typography>
+          </Box>
+          <ServerList
+            servers={servers}
+            deleteHandler={deleteHandler}
+            toggleIndexingHandler={toggleIndexingHandler}
+          />
+        </Box>
+        <Box
           sx={{
+            border: "solid 1px black",
+            overflowY: "scroll",
+            overflowX: "hidden",
+            whiteSpace: "pre-wrap",
+            fontFamily: "monospace",
+            fontSize: "0.75rem",
+            lineHeight: "1.1rem",
+            padding: "0.5rem",
+            backgroundColor: (theme) => theme.palette.grey[100],
             marginBottom: "2rem",
           }}
         >
-          Add local folder
-        </Button>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          width="100%"
-        >
-          <Typography variant="h2" sx={{ fontSize: "1.5rem" }}>
-            Running servers:
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            sx={{ fontWeight: "bold", textAlign: "right" }}
-            id="switch-list-label"
-          >
-            Search
-            <br />
-            enabled?
-          </Typography>
-        </Box>
-        <ServerList
-          servers={servers}
-          deleteHandler={deleteHandler}
-          toggleIndexingHandler={toggleIndexingHandler}
-        />
-        <Box sx={{ marginTop: "2rem" }}>
-          <Typography variant="body2" component="div">
-            <LogContainer>{logMessages}</LogContainer>
-          </Typography>
+          {processLogs(logMessages)}
         </Box>
       </Container>
     </ThemeProvider>
