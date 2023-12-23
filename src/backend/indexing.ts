@@ -161,8 +161,16 @@ export class IndexingServer {
     }
 
     if (response.status !== 200) {
+      let body = "";
+      try {
+        body = await response.text();
+      } catch {
+        // ignore
+      }
       this.log(
-        `Error running indexing: ${response.status} ${response.statusText}`,
+        `Error running indexing: ${response.status} ${response.statusText}${
+          body ? " body: " + body : ""
+        }`,
         "error"
       );
       console.log(response.url);
