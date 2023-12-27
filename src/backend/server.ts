@@ -88,11 +88,15 @@ export function startServer(
     try {
       const parentFolderPathParamValue =
         req?.query?.parentFolderPath?.toString();
-      const parentFolderPath = await resolveFilePath(
+      let parentFolderPath = await resolveFilePath(
         parentFolderPathParamValue
           ? path.join(folder, parentFolderPathParamValue)
           : folder
       );
+
+      if (!parentFolderPath) {
+        parentFolderPath = folder;
+      }
 
       const files = await fs.promises.readdir(parentFolderPath);
       const filesAndFolders = await Promise.all(
