@@ -84,6 +84,23 @@ export function startServer(
     }
   });
 
+  app.post("/api/remove_server", async (req: Request, res: Response) => {
+    if (onEvent) {
+      onEvent({
+        type: "remove_server",
+        payload: {
+          port,
+        },
+      });
+      return res.json({ success: true });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "No listener to accept event.",
+      });
+    }
+  });
+
   app.get("/api/files", async (req: Request, res: Response) => {
     try {
       const parentFolderPathParamValue =

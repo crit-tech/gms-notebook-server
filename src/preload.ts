@@ -84,6 +84,11 @@ export class GmsNotebookServers implements GmsNotebookNamespace {
       return;
     }
 
+    if (event.type === "remove_server") {
+      this.stopServer(event.payload.port);
+      return;
+    }
+
     if (event.type !== "connect") {
       console.log("Unhandled event:", event);
       return;
